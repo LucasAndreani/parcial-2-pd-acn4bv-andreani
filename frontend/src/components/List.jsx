@@ -1,3 +1,5 @@
+import { ListGroup, Button, InputGroup, Form } from "react-bootstrap";
+
 function List({
     tasks,
     deleteTask,
@@ -5,36 +7,77 @@ function List({
     editingId,
     editingText,
     setEditingText,
-    saveEdit
+    saveEdit,
+    cancelEdit
 }) {
+    const handleSave = () => {
+        if (!editingText.trim()) {
+            return;
+        }
+        saveEdit();
+    };
+
+    if (tasks.length === 0) {
+        return (
+            <div className="text-center text-muted py-5">
+                <p className="mb-0">
+                    No hay tareas. Agrega una nueva tarea para comenzar.
+                </p>
+            </div>
+        );
+    }
+
     return (
-        <ul>
+        <ListGroup className="mt-3">
             {tasks.map(task => (
-                <li key={task.id} style={{ marginBottom: "10px" }}>
-                    
+                <ListGroup.Item
+                    key={task.id}
+                    className="d-flex justify-content-between align-items-center py-3"
+                >
                     {editingId === task.id ? (
-                        <input
-                            type="text"
-                            value={editingText}
-                            onChange={(e) => setEditingText(e.target.value)}
-                        />
+                        <InputGroup style={{ flex: 1, maxWidth: "500px" }}>
+                            <Form.Control
+                                type="text"
+                                value={editingText}
+                                onChange={(e) => setEditingText(e.target.value)}
+                                onKeyPress={(e) => {
+                                    if (e.key === "Enter") handleSave();
+                                    if (e.key === "Escape") cancelEdit();
+                                }}
+                                maxLength={100}
+                            />
+                            <Button variant="secondary" size="sm" onClick={handleSave}>
+                                Guardar
+                            </Button>
+                            <Button variant="outline-secondary" size="sm" onClick={cancelEdit}>
+                                Cancelar
+                            </Button>
+                        </InputGroup>
                     ) : (
-                        <span>{task.title}</span>
+                        <>
+                            <span className="flex-grow-1">{task.title}</span>
+                            <div>
+                                <Button
+                                    variant="outline-secondary"
+                                    size="sm"
+                                    className="me-2"
+                                    onClick={() => startEditing(task)}
+                                >
+                                    Editar
+                                </Button>
+                                <Button
+                                    variant="outline-secondary"
+                                    size="sm"
+                                    onClick={() => deleteTask(task.id)}
+                                >
+                                    Eliminar
+                                </Button>
+                            </div>
+                        </>
                     )}
-
-                    {editingId === task.id ? (
-                        <button onClick={saveEdit}>Save</button>
-                    ) : (
-                        <button onClick={() => startEditing(task)}>Edit</button>
-                    )}
-
-                    <button onClick={() => deleteTask(task.id)}>
-                        Delete
-                    </button>
-
-                </li>
+                </ListGroup.Item>
             ))}
-        </ul>
+        </ListGroup>
     );
 }
 

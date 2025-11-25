@@ -1,27 +1,67 @@
 import { useState } from "react";
+import { Form as BootstrapForm, Button, InputGroup } from "react-bootstrap";
 
 export default function Form({ onAdd }) {
     const [title, setTitle] = useState("");
+    const [error, setError] = useState("");
+
+    const validateTitle = (value) => {
+        if (!value.trim()) {
+            return "El título no puede estar vacío";
+        }
+        if (value.trim().length < 3) {
+            return "El título debe tener al menos 3 caracteres";
+        }
+        if (value.trim().length > 100) {
+            return "El título no puede exceder 100 caracteres";
+        }
+        return "";
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!title.trim()) return
+        const validationError = validateTitle(title);
+        if (validationError) {
+            setError(validationError);
+            return;
+        }
 
-        await onAdd(title)
+        setError("");
+        await onAdd(title);
+        setTitle("");
+    };
 
-        setTitle("")
-    }
+    const handleChange = (e) => {
+        const value = e.target.value;
+        setTitle(value);
+        if (error) {
+            setError(validateTitle(value));
+        }
+    };
 
     return (
-        <form onSubmit={handleSubmit}>
-            <input
-                type="text"
-                placeholder="Nueva Task..."
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-            />
-            <button type="submit">Agregar</button>
-        </form>
-    )
+        <BootstrapForm onSubmit={handleSubmit} className="mb-4">
+            <BootstrapForm.Group>
+                <InputGroup>
+                    <BootstrapForm.Control
+                        type="text"
+                        placeholder="Escribe una nueva tarea..."
+                        value={title}
+                        onChange={handleChange}
+                        isInvalid={!!error}
+                        maxLength={100}
+                    />
+                    <Button variant="secondary" type="submit">
+                        Agregar
+                    </Button>
+                </InputGroup>
+                {error && (
+                    <BootstrapForm.Text className="text-danger mt-2 d-block">
+                        {error}
+                    </BootstrapForm.Text>
+                )}
+            </BootstrapForm.Group>
+        </BootstrapForm>
+    );
 }
