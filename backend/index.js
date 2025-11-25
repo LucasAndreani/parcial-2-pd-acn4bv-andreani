@@ -55,6 +55,24 @@ app.post("/tasks", validateTask, (req, res) => {
 })
 
 
+app.put("/tasks/:id", validateTask, (req, res) => {
+    const id = Number(req.params.id);
+    const tasks = readData();
+
+    const index = tasks.findIndex(t => t.id === id);
+
+    if (index === -1) {
+        return res.status(404).json({ error: "Task no encontrada" });
+    }
+
+    tasks[index].title = req.body.title;
+
+    writeData(tasks);
+
+    res.json(tasks[index]);
+});
+
+
 app.delete("/tasks/:id", (req, res) => {
     const id = Number(req.params.id);
 
