@@ -1,4 +1,4 @@
-import fs from "fs";
+import fs, { write } from "fs";
 import express from "express";
 import cors from "cors";
 
@@ -53,6 +53,24 @@ app.post("/tasks", validateTask, (req, res) => {
 
     res.status(201).json(newTask);
 })
+
+
+app.delete("/tasks/:id", (req, res) => {
+    const id = Number(req.params.id);
+
+    let tasks = readData();
+    const exists = tasks.some(t => t.id === id);
+
+    if (!exists) {
+        return res.status(404).json({ error: "Task no encontrada" })
+    }
+
+    tasks = tasks.filter(t => t.id !== id);
+    writeData(tasks);
+
+    res.json({ message: "Task eliminada correctamente"});
+});
+
 
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`)
