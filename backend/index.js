@@ -19,6 +19,11 @@ function writeData(data) {
 app.use(cors());
 app.use(express.json());
 
+app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    next();
+})
+
 app.get("/", (req, res) => {
     res.json({ message: "Servidor funcionando" });
 });
@@ -28,7 +33,14 @@ app.get("/tasks", (req, res) => {
     res.json(tasks)
 });
 
-app.post("/tasks", (req, res) => {
+function validateTask(req, res, next) {
+    if (!req.body.title || req.body.title.trim() === "") {
+        return res.status(400).json({ error: "El campo 'title' es obligatorio" })
+    }
+    next()
+}
+
+app.post("/tasks", validateTask, (req, res) => {
     const tasks = readData();
 
     const newTask = {
