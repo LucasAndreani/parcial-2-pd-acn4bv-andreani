@@ -1,4 +1,5 @@
 import { ListGroup, Button, InputGroup, Form } from "react-bootstrap";
+import { Link } from "react-router-dom";
 
 function List({
     tasks,
@@ -56,7 +57,12 @@ function List({
                         </InputGroup>
                     ) : (
                         <>
-                            <span className="flex-grow-1">{task.title}</span>
+                            <Link
+                                to={`/tasks/${task.id}`}
+                                className="flex-grow-1 text-decoration-none text-body"
+                            >
+                                {task.title}
+                            </Link>
                             <div>
                                 <Button
                                     variant="outline-secondary"

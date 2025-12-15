@@ -1,7 +1,105 @@
 import { useState, useEffect } from "react";
-import { Container, Alert } from "react-bootstrap";
+import { Container, Alert, Nav } from "react-bootstrap";
+import { Routes, Route, Link, useParams } from "react-router-dom";
 import List from "./components/List";
 import Form from "./components/Form";
+
+// Pagina de detalle de una tarea
+function TaskDetailPage() {
+    const { id } = useParams();
+    const [task, setTask] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+        const loadTask = async () => {
+            try {
+                const res = await fetch(`http://localhost:3000/tasks/${id}`);
+                if (!res.ok) {
+                    const errData = await res.json();
+                    throw new Error(errData.error || "Error al cargar tarea");
+                }
+                const data = await res.json();
+                setTask(data);
+            } catch (err) {
+                console.error("Error al cargar tarea:", err);
+                setError(err.message || "Error al cargar tarea");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadTask();
+    }, [id]);
+
+    if (loading) {
+        return <p>Cargando tarea...</p>;
+    }
+
+    if (error) {
+        return <Alert variant="danger">{error}</Alert>;
+    }
+
+    if (!task) {
+        return <p>No se encontro la tarea.</p>;
+    }
+
+    return (
+        <div>
+            <h2 className="mb-3">Detalle de tarea</h2>
+            <p><strong>ID:</strong> {task.id}</p>
+            <p><strong>Titulo:</strong> {task.title}</p>
+        </div>
+    );
+}
+
+// Pagina principal con la lista de tareas
+function TasksPage({
+    tasks,
+    message,
+    addTask,
+    deleteTask,
+    startEditing,
+    editingId,
+    editingText,
+    setEditingText,
+    saveEdit,
+    cancelEdit
+}) {
+    return (
+        <div className="card border">
+            <div className="card-body p-4">
+                <h1 className="mb-4 text-center">
+                    Gestor de Tareas
+                </h1>
+
+                {message.text && (
+                    <Alert
+                        variant={message.type}
+                        dismissible
+                        onClose={() => message.onClose && message.onClose()}
+                        className="mb-4"
+                    >
+                        {message.text}
+                    </Alert>
+                )}
+
+                <Form onAdd={addTask} />
+
+                <List
+                    tasks={tasks}
+                    deleteTask={deleteTask}
+                    startEditing={startEditing}
+                    editingId={editingId}
+                    editingText={editingText}
+                    setEditingText={setEditingText}
+                    saveEdit={saveEdit}
+                    cancelEdit={cancelEdit}
+                />
+            </div>
+        </div>
+    );
+}
 
 function App() {
     const [tasks, setTasks] = useState([]);
@@ -27,7 +125,7 @@ function App() {
 
     // Muestra un mensaje temporal al usuario
     const showMessage = (type, text) => {
-        setMessage({ type, text });
+        setMessage({ type, text, onClose: () => setMessage({ type: "", text: "" }) });
         setTimeout(() => setMessage({ type: "", text: "" }), 3000);
     };
 
@@ -117,37 +215,32 @@ function App() {
 
     return (
         <Container className="my-5">
-            <div className="card border">
-                <div className="card-body p-4">
-                    <h1 className="mb-4 text-center">
-                        Gestor de Tareas
-                    </h1>
+            <Nav className="mb-4 gap-3">
+                <Nav.Item>
+                    <Nav.Link as={Link} to="/">Lista de tareas</Nav.Link>
+                </Nav.Item>
+            </Nav>
 
-                    {message.text && (
-                        <Alert 
-                            variant={message.type} 
-                            dismissible 
-                            onClose={() => setMessage({ type: "", text: "" })}
-                            className="mb-4"
-                        >
-                            {message.text}
-                        </Alert>
-                    )}
-
-                    <Form onAdd={addTask} />
-
-                    <List
-                        tasks={tasks}
-                        deleteTask={deleteTask}
-                        startEditing={startEditing}
-                        editingId={editingId}
-                        editingText={editingText}
-                        setEditingText={setEditingText}
-                        saveEdit={saveEdit}
-                        cancelEdit={cancelEdit}
-                    />
-                </div>
-            </div>
+            <Routes>
+                <Route
+                    path="/"
+                    element={
+                        <TasksPage
+                            tasks={tasks}
+                            message={message}
+                            addTask={addTask}
+                            deleteTask={deleteTask}
+                            startEditing={startEditing}
+                            editingId={editingId}
+                            editingText={editingText}
+                            setEditingText={setEditingText}
+                            saveEdit={saveEdit}
+                            cancelEdit={cancelEdit}
+                        />
+                    }
+                />
+                <Route path="/tasks/:id" element={<TaskDetailPage />} />
+            </Routes>
         </Container>
     );
 }
